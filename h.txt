@@ -1,0 +1,141 @@
+ <Grid.RowDefinitions>
+            <RowDefinition Height="100"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        
+        <DataGrid Grid.Row="1" Name="MainDG" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="№" Binding="{Binding C__horse}"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}"/>
+                <DataGridTextColumn Header="Age" Binding="{Binding Age}"/>
+                <DataGridTextColumn Header="Breed" Binding="{Binding Breed1.Name}"/>
+                <DataGridTextColumn Header="Suit" Binding="{Binding Suit1.Name}"/>
+                <DataGridTextColumn Header="Image" Binding="{Binding Image}" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal">
+            <TextBox Name="NameTB" Margin="5" Height="30" Width="150" TextChanged="NameTB_TextChanged"></TextBox>
+            <ComboBox  Margin="5" DisplayMemberPath="Name" Height="30" Name="BreedCB" Width="150" SelectionChanged="BreedCB_SelectionChanged" ></ComboBox>
+        </StackPanel>
+        <StackPanel Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Bottom" Orientation="Horizontal">
+            <Button Margin="5" Height="30"  Width="150" Content="Добавить" Click="Button_Click"/>
+            <Button Margin="5" Height="30"  Width="150" Content="Изменить" Click="Button_Click_1"/>
+            <Button Margin="5" Height="30"  Width="150" Content="Удалить" Click="Button_Click_2"/>
+            <Button Margin="5" Height="30"  Width="150" Content="Очистить" Click="Button_Click_3"/>
+        </StackPanel>
+////
+ public HoursPage()
+        {
+            InitializeComponent();
+            MainDG.ItemsSource = MainWindow.HorsesEntities.Horses.ToList();
+            BreedCB.ItemsSource = MainWindow.HorsesEntities.Breeds.ToList();
+
+            
+        }
+        public void Refresh()
+        {
+            var filterHorse = (IEnumerable<Datas.Horse>)MainWindow.HorsesEntities.Horses;
+
+            if(!string.IsNullOrWhiteSpace(NameTB.Text))
+            {
+                var searhName = NameTB.Text.ToLower();
+                filterHorse = filterHorse.Where(i => i.Name.ToLower().Contains(searhName));
+            }
+
+            if(BreedCB.SelectedIndex>-1)
+            {
+                var selectedBreeD = BreedCB.SelectedItem as Datas.Breed;
+                filterHorse = filterHorse.Where(i => i.Breed1.C__breed == selectedBreeD.C__breed);
+            }
+            MainDG.ItemsSource = filterHorse.ToList();
+
+
+        }
+
+        private void NameTB_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Refresh();
+        }
+
+        private void BreedCB_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Refresh();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Horse horse = new Horse();
+            NavigationService.Navigate(new AddHorse(horse));
+        }
+
+        // изменение 
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            var selectedHorse = MainDG.SelectedItem as Datas.Horse;
+            if(selectedHorse==null)
+            {
+                MessageBox.Show("Выберите элемент", "Ошибка !");
+            }
+            else
+            {
+                NavigationService.Navigate(new AddHorse(selectedHorse));
+            }
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            var selectedHorse = MainDG.SelectedItem as Datas.Horse;
+            if(selectedHorse==null)
+            {
+                MessageBox.Show("Выберите элемент", "Ошибка !");
+            }
+            else
+            {
+                MainWindow.HorsesEntities.Horses.Remove(selectedHorse);
+                MainWindow.HorsesEntities.SaveChanges();
+                MainDG.DataContext = MainWindow.HorsesEntities.Horses.ToList();
+            }
+            Refresh();
+        }
+
+        private void Button_Click_3(object sender, RoutedEventArgs e)
+        {
+            NameTB.Text = "";
+            BreedCB.SelectedIndex = -1;
+        }
+    }
+////
+<StackPanel HorizontalAlignment="Center">
+            <TextBox Name="NameTB" Text="{Binding Name}" Height="30"  Width="150" Margin="5" />
+            <TextBox Name="AgeTB" Text="{Binding Age}" Height="30" Width="150" Margin="5" />
+            <ComboBox Name="BreedTB" SelectedItem="{Binding Breed1}" Height="30" DisplayMemberPath="Name" Width="150" Margin="5" />
+            <ComboBox Name="SuitTB" Height="30" SelectedItem="{Binding Suit1}"  DisplayMemberPath="Name" Width="150" Margin="5" />
+            <Button Height="30" Width="150" Margin="5" Content="Сохранить" Click="Button_Click"/>
+        </StackPanel>
+////
+ Horse horse = new Horse(); 
+        public AddHorse(Horse horses)
+        {
+            InitializeComponent();
+            horse = horses;
+            BreedTB.ItemsSource = MainWindow.HorsesEntities.Breeds.ToList();
+            SuitTB.ItemsSource = MainWindow.HorsesEntities.Suits.ToList();
+            this.DataContext = horse;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            if(NameTB.Text=="" || AgeTB.Text=="" )
+            {
+                MessageBox.Show("Не все поля заполнены", "Ошибка!");
+            }
+            else
+            {
+                if(horse.C__horse==0)
+                {
+                    MainWindow.HorsesEntities.Horses.Add(horse);
+                    MainWindow.HorsesEntities.SaveChanges();
+                }
+                NavigationService.Navigate(new HoursPage());
+            }
+        }
